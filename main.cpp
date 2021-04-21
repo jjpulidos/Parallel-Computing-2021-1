@@ -24,11 +24,10 @@ uchar medianFilterWindow(const cv::Mat &src, int i, int j){
     }
     sort(pixel.begin(), pixel.end());
     return pixel[(ksize * ksize) / 2];
-
 }
 
-Mat medianFilter(const cv::Mat &src)
-{
+Mat medianFilter(const cv::Mat &src){
+
     dst = src.clone();
 
     for (int i = 1; i < src.rows - ksize; ++i){
@@ -44,7 +43,6 @@ Mat medianFilter(const cv::Mat &src)
 int main (int argc, char* argv[]) {
 
     checkNumArgs(argc, argv[0]);
-    
     ksize = parseKsize(argv[1]);
 
     img = getImg(argv[2]);
@@ -52,8 +50,8 @@ int main (int argc, char* argv[]) {
     vector<Mat> hsvChannels(3);
     split(img_hsv, hsvChannels);
 
-    for(int i = -1; i<ksize-1; i++){
-        for(int j = -1; j<ksize-1; j++){
+    for(int i = -1; i < ksize - 1; i++){
+        for(int j = -1; j < ksize - 1; j++){
             delta.push_back(make_pair(i, j));
         }
     }
@@ -65,12 +63,10 @@ int main (int argc, char* argv[]) {
     auto end = high_resolution_clock::now();
     duration<double, milli> total_time = (end - start);
     cout << "Tiempo de respuesta: " << total_time.count() / 1000 << '\n';
+
     vector<Mat> channels = {new_h, new_s, new_v};
     Mat merged, filtered;
     merge(channels, merged);
     cvtColor(merged, filtered, COLOR_HSV2BGR);
     putImg(filtered, argv[3]);
-    //imshow("windowsFilter", filtered);
-    //waitKey(0);
-    //destroyAllWindows();
 }

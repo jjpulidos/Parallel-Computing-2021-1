@@ -10,9 +10,9 @@ using namespace cv;
 void checkNumArgs(int numArgs, char* progName){
 
     if(numArgs != 4){
-    
+
         cout
-            << "Usage:\n  " 
+            << "Usage:\n  "
             << progName << " ksize origin destination\n"
             << "    ksize: positive integer size of filter window\n"
             << "    origin: path of image to be smoothed\n"
@@ -26,16 +26,16 @@ int parseKsize(char *arg){
 
     int size;
     try{
-    
+
         size = stoi(string(arg));
         if(size < 1){
-        
+
             throw invalid_argument("");
         }
     }
     catch(...){
-    
-        cout 
+
+        cout
             << "Invalid value for ksize (kernel window size)" 
             << endl;
         exit(3);
@@ -47,9 +47,9 @@ Mat getImg(char *filename){
 
     Mat image = imread(filename, IMREAD_COLOR); // Load an image
     if(image.empty()){
-    
+
         cout
-            << "Could not read origin image at " << filename 
+            << "Could not read origin image at " << filename
             << endl;
         exit(2);
     }
@@ -62,7 +62,7 @@ void putImg(Mat image, char *filename){
     compression_params.push_back(IMWRITE_PNG_COMPRESSION);
     compression_params.push_back(0);
     if(!imwrite(filename, image, compression_params)){
-    
+
         cout
             << "Could not write destination image at " << filename
             << endl;

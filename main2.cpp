@@ -15,12 +15,6 @@ int total_threads;
 int ksize = 4;
 vector<pair<int, int>> delta;
 int* response;
-pthread_t* my_threads;
-
-void myfunction (int i) {  // function:
-    std::cout << ' ' << i;
-}
-
 
 vector<uchar> medianFilterWindow(int i, int j){
 
@@ -37,27 +31,26 @@ vector<uchar> medianFilterWindow(int i, int j){
     sort(pixelV.begin(), pixelV.end());
     vector<uchar> pixels = {pixelH[(ksize * ksize) / 2], pixelS[(ksize * ksize) / 2], pixelV[(ksize * ksize) / 2]};
     return pixels;
-
 }
 
-void* medianFilter(void* id)
-{
+void* medianFilter(void* id){
 
     int thread_id = *(int*) id;
     int n = new_h.rows/ total_threads;
     int start = n * thread_id;
     int end = start + n;
     vector<uchar> pixels;
+
     for (int i = start; i < end; i++){
+
         for(int j =0; j<new_h.cols-ksize;j++){
+
             pixels = medianFilterWindow(i, j);
             dst_h.at<uchar>(i, j) = pixels[0];
             dst_s.at<uchar>(i, j) = pixels[1];
             dst_v.at<uchar>(i, j) = pixels[2];
-
         }
     }
-
 }
 
 
@@ -73,7 +66,7 @@ int main (int argc, char *argv[]) {
     cvtColor(img, img_hsv, COLOR_BGR2HSV);
     vector<Mat> hsvChannels(3);
     split(img_hsv, hsvChannels);
-    
+
     for(int i = -1; i<ksize-1; i++){
         for(int j = -1; j<ksize-1; j++){
             delta.push_back(make_pair(i, j));
@@ -87,33 +80,28 @@ int main (int argc, char *argv[]) {
     dst_s = new_s.clone();
     dst_v = new_v.clone();
     //Thread variables
-    int threadId[total_threads], i, *retval;
+    int threadId[total_threads];
     pthread_t thread[total_threads];
 
     auto start = high_resolution_clock::now();
-    for(i = 0; i < total_threads; i++){
+
+    for(int i = 0; i < total_threads; i++){
         threadId[i] = i;
         pthread_create(&thread[i], NULL, medianFilter, &threadId[i]);
     }
 
     //Join Threads
-    for(i = 0; i < total_threads; i++){
-        pthread_join(thread[i], (void **)&retval);
+    for(int i = 0; i < total_threads; i++){
+        pthread_join(thread[i], NULL);
     }
 
     auto end = high_resolution_clock::now();
     duration<double, milli> total_time = (end - start);
     cout << "Tiempo de respuesta: " << total_time.count() / 1000 << '\n';
-    vector<Mat> channels = {dst_h, dst_s, dst_v};
 
+    vector<Mat> channels = {dst_h, dst_s, dst_v};
     Mat merged, filtered;
     merge(channels, merged);
     cvtColor(merged, filtered, COLOR_HSV2BGR);
     putImg(filtered, argv[3]);
-    return 0;
 }
-
-
-
-
-
