@@ -4,6 +4,7 @@
 #include "opencv2/highgui.hpp"
 #include <fstream>
 #include <sstream>
+#include "input.hpp"
 
 using namespace std;
 using namespace cv;
@@ -60,22 +61,34 @@ void* medianFilter(void* id)
 }
 
 
-int main () {
+int main (int argc, char *argv[]) {
 
+    if(argc != 4){
+    
+        cout
+            << "Usage:\n  " 
+            << argv[0] << " ksize origin destination\n"
+            << "    ksize: positive integer size of filter window\n"
+            << "    origin: path of image to be smoothed\n"
+            << "    destination: path to write result to"
+            << endl;
+        return 1;
+    }
 
+    ksize = parseKsize(argv[1]);
+
+    total_threads = 12;
+
+    img = getImg(argv[2]);
+    cvtColor(img, img_hsv, COLOR_BGR2HSV);
+    vector<Mat> hsvChannels(3);
+    split(img_hsv, hsvChannels);
+    
     for(int i = -1; i<ksize-1; i++){
         for(int j = -1; j<ksize-1; j++){
             delta.push_back(make_pair(i, j));
         }
     }
-
-    total_threads = 12;
-
-    img = imread("../LenaNoise.png", IMREAD_COLOR); // Load an image
-    imshow("windowsOriginal", img);
-    cvtColor(img, img_hsv, COLOR_BGR2HSV);
-    vector<Mat> hsvChannels(3);
-    split(img_hsv, hsvChannels);
 
     new_h = hsvChannels[0];
     new_s = hsvChannels[1];
@@ -106,9 +119,7 @@ int main () {
     Mat merged, filtered;
     merge(channels, merged);
     cvtColor(merged, filtered, COLOR_HSV2BGR);
-    imshow("windowsFilter", filtered);
-    waitKey(0);
-    destroyAllWindows();
+    putImg(filtered, argv[3]);
     return 0;
 }
 

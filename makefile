@@ -1,31 +1,38 @@
 #source files
-SRCS = main.cpp input.cpp
+SRCS = input.cpp
+SRCS_SEQ = main.cpp $(SRCS)
+SRCS_PAR = main2.cpp $(SRCS)
 
 #target name
-TARG = sequential
+SEQ = sequential
+PAR = paralel
 
 #compiler, compile flags, linking flags
 CC = g++
-OPTS = -I /usr/local/include/opencv4/ -Wall -O -Wno-unused-result
+OPTS = -I /usr/local/include/opencv4/ -Wall -Wno-unused-result #-O
 LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -pthread
 
-OBJS = $(SRCS:.cpp=.o)
+OBJS_SEQ = $(SRCS_SEQ:.cpp=.o)
+OBJS_PAR = $(SRCS_SEQ:.cpp=.o)
 
 program: all tidy
 
-all: $(TARG)
+all: $(SEQ) $(PAR)
 
-$(TARG): $(OBJS)
-	$(CC) -o $(TARG) $(OBJS) $(LIBS)
+$(SEQ): $(OBJS_SEQ)
+	$(CC) -o $(SEQ) $(OBJS_SEQ) $(LIBS)
+
+$(PAR): $(OBJS_PAR)
+	$(CC) -o $(PAR) $(OBJS_PAR) $(LIBS)
 
 %.o: %.cpp
 	$(CC) $(OPTS) -c $< -o $@
 
 d: OPTS += -g
-d: $(TARG)
+d: $(SEQ)
 
 tidy:
-	rm -f $(OBJS)
+	rm -f $(OBJS_SEQ) $(OBJS_PAR)
 
 clean: tidy
-	rm -f $(TARG)
+	rm -f $(SEQ) $(PAR)
