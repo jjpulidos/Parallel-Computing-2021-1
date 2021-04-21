@@ -37,15 +37,18 @@ void* medianFilter(void* id){
 
     int thread_id = *(int*) id;
     int n = new_h.rows/ total_threads;
-    int start = n * thread_id;
+    int start = n * thread_id - ksize;
     int end = start + n;
-    vector<uchar> pixels;
+    start = start < 0 ? 0 : start;
+    
+    vector<uchar> pixels = {new_h.at<uchar>(1, 1), new_s.at<uchar>(1, 1), new_v.at<uchar>(1, 1)};
 
     for (int i = start; i < end; i++){
 
         for(int j =0; j<new_h.cols-ksize;j++){
 
             pixels = medianFilterWindow(i, j);
+            
             dst_h.at<uchar>(i, j) = pixels[0];
             dst_s.at<uchar>(i, j) = pixels[1];
             dst_v.at<uchar>(i, j) = pixels[2];
@@ -85,20 +88,22 @@ int main (int argc, char *argv[]) {
 
     auto start = high_resolution_clock::now();
 
+
     for(int i = 0; i < total_threads; i++){
+        
         threadId[i] = i;
         pthread_create(&thread[i], NULL, medianFilter, &threadId[i]);
     }
-
+    
     //Join Threads
     for(int i = 0; i < total_threads; i++){
         pthread_join(thread[i], NULL);
     }
-
+    
     auto end = high_resolution_clock::now();
     duration<double, milli> total_time = (end - start);
     cout << "Tiempo de respuesta: " << total_time.count() / 1000 << '\n';
-
+    
     vector<Mat> channels = {dst_h, dst_s, dst_v};
     Mat merged, filtered;
     merge(channels, merged);
