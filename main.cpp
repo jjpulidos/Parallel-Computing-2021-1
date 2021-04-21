@@ -4,10 +4,14 @@
 #include "opencv2/highgui.hpp"
 #include <fstream>
 #include <sstream>
+#include <stdlib.h>
 
 using namespace std;
 using namespace cv;
 using namespace chrono;
+
+int parseKsize(char *arg);
+Mat getImg(char *filename);
 
 Mat img_hsv, img, new_h, new_s, new_v, dst;
 vector<pair<int, int>> delta;
@@ -39,18 +43,34 @@ Mat medianFilter(const cv::Mat &src)
 }
 
 
-int main () {
+
+
+int main (int argc, char* argv[]) {
+
+    if(argc != 4){
+    
+        cout
+            << "Usage:\n  " 
+            << argv[0] << " ksize origin destination\n"
+            << "    ksize: positive integer size of filter window\n"
+            << "    origin: path of image to be smoothed\n"
+            << "    destination: path to write result to"
+            << endl;
+        return 1;
+    }
+    
+    ksize = parseKsize(argv[1]);
+
+    img = getImg(argv[2]);
+    cvtColor(img, img_hsv, COLOR_BGR2HSV);
+    vector<Mat> hsvChannels(3);
+    split(img_hsv, hsvChannels);
 
     for(int i = -1; i<ksize-1; i++){
         for(int j = -1; j<ksize-1; j++){
             delta.push_back(make_pair(i, j));
         }
     }
-
-    img = imread("../LenaNoise.png", IMREAD_COLOR); // Load an image
-    cvtColor(img, img_hsv, COLOR_BGR2HSV);
-    vector<Mat> hsvChannels(3);
-    split(img_hsv, hsvChannels);
 
     auto start = high_resolution_clock::now();
     new_h = medianFilter(hsvChannels[0]);
@@ -66,13 +86,52 @@ int main () {
     vector<int> compression_params;
     compression_params.push_back(IMWRITE_PNG_COMPRESSION);
     compression_params.push_back(0);
-    imwrite("new_image.png", filtered, compression_params);
+    if(!imwrite(argv[3], filtered, compression_params)){
+    
+        cout
+            << "Could not write destination image at " << argv[3] 
+            << endl;
+        return 4;
+    }
     //imshow("windowsFilter", filtered);
     //waitKey(0);
     //destroyAllWindows();
 }
 
+int parseKsize(char *arg){
 
+    int size;
+    try{
+    
+        size = stoi(string(arg));
+        if(size < 1){
+        
+            throw invalid_argument("");
+        }
+    }
+    catch(...){
+    
+        cout 
+            << "Invalid value for ksize (kernel window size)" 
+            << endl;
+        exit(3);
+    }
+    return size;
+}
 
+Mat getImg(char *filename){
+
+    Mat img = imread(filename, IMREAD_COLOR); // Load an image
+    
+    if(img.empty()){
+    
+        cout
+            << "Could not read origin image at " << filename 
+            << endl;
+        exit(2);
+    }
+    
+    return img;
+}
 
 
