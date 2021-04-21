@@ -43,17 +43,7 @@ Mat medianFilter(const cv::Mat &src)
 
 int main (int argc, char* argv[]) {
 
-    if(argc != 4){
-    
-        cout
-            << "Usage:\n  " 
-            << argv[0] << " ksize origin destination\n"
-            << "    ksize: positive integer size of filter window\n"
-            << "    origin: path of image to be smoothed\n"
-            << "    destination: path to write result to"
-            << endl;
-        return 1;
-    }
+    checkNumArgs(argc, argv[0]);
     
     ksize = parseKsize(argv[1]);
 
