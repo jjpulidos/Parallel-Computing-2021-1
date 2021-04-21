@@ -12,6 +12,7 @@ using namespace chrono;
 
 int parseKsize(char *arg);
 Mat getImg(char *filename);
+void putImg(Mat image, char *filename);
 
 Mat img_hsv, img, new_h, new_s, new_v, dst;
 vector<pair<int, int>> delta;
@@ -83,16 +84,7 @@ int main (int argc, char* argv[]) {
     Mat merged, filtered;
     merge(channels, merged);
     cvtColor(merged, filtered, COLOR_HSV2BGR);
-    vector<int> compression_params;
-    compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(0);
-    if(!imwrite(argv[3], filtered, compression_params)){
-    
-        cout
-            << "Could not write destination image at " << argv[3] 
-            << endl;
-        return 4;
-    }
+    putImg(filtered, argv[3]);
     //imshow("windowsFilter", filtered);
     //waitKey(0);
     //destroyAllWindows();
@@ -121,9 +113,9 @@ int parseKsize(char *arg){
 
 Mat getImg(char *filename){
 
-    Mat img = imread(filename, IMREAD_COLOR); // Load an image
+    Mat image = imread(filename, IMREAD_COLOR); // Load an image
     
-    if(img.empty()){
+    if(image.empty()){
     
         cout
             << "Could not read origin image at " << filename 
@@ -131,7 +123,21 @@ Mat getImg(char *filename){
         exit(2);
     }
     
-    return img;
+    return image;
+}
+
+void putImg(Mat image, char *filename){
+
+    vector<int> compression_params;
+    compression_params.push_back(IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(0);
+    if(!imwrite(filename, image, compression_params)){
+    
+        cout
+            << "Could not write destination image at " << filename
+            << endl;
+        exit(4);
+    }
 }
 
 
