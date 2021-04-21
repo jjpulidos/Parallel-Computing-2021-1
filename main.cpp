@@ -5,14 +5,11 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
+#include "input.hpp"
 
 using namespace std;
 using namespace cv;
 using namespace chrono;
-
-int parseKsize(char *arg);
-Mat getImg(char *filename);
-void putImg(Mat image, char *filename);
 
 Mat img_hsv, img, new_h, new_s, new_v, dst;
 vector<pair<int, int>> delta;
@@ -42,8 +39,6 @@ Mat medianFilter(const cv::Mat &src)
 
     return dst;
 }
-
-
 
 
 int main (int argc, char* argv[]) {
@@ -89,55 +84,3 @@ int main (int argc, char* argv[]) {
     //waitKey(0);
     //destroyAllWindows();
 }
-
-int parseKsize(char *arg){
-
-    int size;
-    try{
-    
-        size = stoi(string(arg));
-        if(size < 1){
-        
-            throw invalid_argument("");
-        }
-    }
-    catch(...){
-    
-        cout 
-            << "Invalid value for ksize (kernel window size)" 
-            << endl;
-        exit(3);
-    }
-    return size;
-}
-
-Mat getImg(char *filename){
-
-    Mat image = imread(filename, IMREAD_COLOR); // Load an image
-    
-    if(image.empty()){
-    
-        cout
-            << "Could not read origin image at " << filename 
-            << endl;
-        exit(2);
-    }
-    
-    return image;
-}
-
-void putImg(Mat image, char *filename){
-
-    vector<int> compression_params;
-    compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(0);
-    if(!imwrite(filename, image, compression_params)){
-    
-        cout
-            << "Could not write destination image at " << filename
-            << endl;
-        exit(4);
-    }
-}
-
-
