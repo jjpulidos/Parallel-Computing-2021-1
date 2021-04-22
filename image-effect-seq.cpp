@@ -62,7 +62,7 @@ int main (int argc, char* argv[]) {
     new_v = medianFilter(hsvChannels[2]);
     auto end = high_resolution_clock::now();
     duration<double, milli> total_time = (end - start);
-    cout << "Tiempo de respuesta: " << total_time.count() / 1000 << '\n';
+    cout << "time    = " << total_time.count() / 1000 << '\n';
 
     vector<Mat> channels = {new_h, new_s, new_v};
     Mat merged, filtered;

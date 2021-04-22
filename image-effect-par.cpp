@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
     
     auto end = high_resolution_clock::now();
     duration<double, milli> total_time = (end - start);
-    cout << "Tiempo de respuesta: " << total_time.count() / 1000 << '\n';
+    cout << "time    = " << total_time.count() / 1000 << '\n';
     
     vector<Mat> channels = {dst_h, dst_s, dst_v};
     Mat merged, filtered;
