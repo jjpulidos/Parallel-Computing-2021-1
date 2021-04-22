@@ -4,6 +4,8 @@
 #include "opencv2/highgui.hpp"
 #include <fstream>
 #include <sstream>
+#include <stdlib.h>
+#include "input.hpp"
 
 using namespace std;
 using namespace cv;
@@ -22,11 +24,10 @@ uchar medianFilterWindow(const cv::Mat &src, int i, int j){
     }
     sort(pixel.begin(), pixel.end());
     return pixel[(ksize * ksize) / 2];
-
 }
 
-Mat medianFilter(const cv::Mat &src)
-{
+Mat medianFilter(const cv::Mat &src){
+
     dst = src.clone();
 
     for (int i = 1; i < src.rows - ksize; ++i){
@@ -39,18 +40,21 @@ Mat medianFilter(const cv::Mat &src)
 }
 
 
-int main () {
+int main (int argc, char* argv[]) {
 
-    for(int i = -1; i<ksize-1; i++){
-        for(int j = -1; j<ksize-1; j++){
-            delta.push_back(make_pair(i, j));
-        }
-    }
+    checkNumArgs(4, argc, argv[0]);
+    ksize = parsePosInt(argv[1]);
 
-    img = imread("../LenaNoise.png", IMREAD_COLOR); // Load an image
+    img = getImg(argv[2]);
     cvtColor(img, img_hsv, COLOR_BGR2HSV);
     vector<Mat> hsvChannels(3);
     split(img_hsv, hsvChannels);
+
+    for(int i = -1; i < ksize - 1; i++){
+        for(int j = -1; j < ksize - 1; j++){
+            delta.push_back(make_pair(i, j));
+        }
+    }
 
     auto start = high_resolution_clock::now();
     new_h = medianFilter(hsvChannels[0]);
@@ -58,21 +62,11 @@ int main () {
     new_v = medianFilter(hsvChannels[2]);
     auto end = high_resolution_clock::now();
     duration<double, milli> total_time = (end - start);
-    cout << "Tiempo de respuesta: " << total_time.count() / 1000 << '\n';
+    cout << "time    = " << total_time.count() / 1000 << '\n';
+
     vector<Mat> channels = {new_h, new_s, new_v};
     Mat merged, filtered;
     merge(channels, merged);
     cvtColor(merged, filtered, COLOR_HSV2BGR);
-    vector<int> compression_params;
-    compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(0);
-    imwrite("new_image.png", filtered, compression_params);
-    //imshow("windowsFilter", filtered);
-    //waitKey(0);
-    //destroyAllWindows();
+    putImg(filtered, argv[3]);
 }
-
-
-
-
-
