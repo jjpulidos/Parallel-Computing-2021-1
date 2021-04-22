@@ -1,7 +1,7 @@
 #source files
 SRCS = input.cpp
-SRCS_SEQ = main.cpp $(SRCS)
-SRCS_PAR = main2.cpp $(SRCS)
+SRCS_SEQ = image-effect-seq.cpp $(SRCS)
+SRCS_PAR = image-effect-par.cpp $(SRCS)
 
 #target name
 SEQ = sequential
