@@ -45,7 +45,7 @@ void* medianFilter(void* id){
 
     for (int i = start; i < end; i++){
 
-        for(int j =0; j<new_h.cols-ksize;j++){
+        for(int j = 0; j < new_h.cols - ksize - 1; j++){
 
             pixels = medianFilterWindow(i, j);
             
@@ -69,8 +69,8 @@ int main (int argc, char *argv[]) {
     vector<Mat> hsvChannels(3);
     split(img_hsv, hsvChannels);
 
-    for(int i = -1; i<ksize-1; i++){
-        for(int j = -1; j<ksize-1; j++){
+    for(int i = 0; i < ksize; i++){
+        for(int j = 0; j < ksize; j++){
             delta.push_back(make_pair(i, j));
         }
     }

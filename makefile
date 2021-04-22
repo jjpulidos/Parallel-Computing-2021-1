@@ -29,7 +29,7 @@ $(PAR): $(OBJS_PAR)
 	$(CC) $(OPTS) -c $< -o $@
 
 d: OPTS += -g
-d: $(SEQ)
+d: $(SEQ) $(PAR)
 
 tidy:
 	rm -f $(OBJS_SEQ) $(OBJS_PAR)
