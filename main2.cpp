@@ -59,13 +59,12 @@ void* medianFilter(void* id){
 
 int main (int argc, char *argv[]) {
 
-    checkNumArgs(argc, argv[0]);
+    checkNumArgs(5, argc, argv[0]);
 
-    ksize = parseKsize(argv[1]);
+    ksize = parsePosInt(argv[1]);
+    total_threads = parsePosInt(argv[2]);
 
-    total_threads = 12;
-
-    img = getImg(argv[2]);
+    img = getImg(argv[3]);
     cvtColor(img, img_hsv, COLOR_BGR2HSV);
     vector<Mat> hsvChannels(3);
     split(img_hsv, hsvChannels);
@@ -108,5 +107,5 @@ int main (int argc, char *argv[]) {
     Mat merged, filtered;
     merge(channels, merged);
     cvtColor(merged, filtered, COLOR_HSV2BGR);
-    putImg(filtered, argv[3]);
+    putImg(filtered, argv[4]);
 }

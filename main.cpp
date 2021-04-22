@@ -42,8 +42,8 @@ Mat medianFilter(const cv::Mat &src){
 
 int main (int argc, char* argv[]) {
 
-    checkNumArgs(argc, argv[0]);
-    ksize = parseKsize(argv[1]);
+    checkNumArgs(4, argc, argv[0]);
+    ksize = parsePosInt(argv[1]);
 
     img = getImg(argv[2]);
     cvtColor(img, img_hsv, COLOR_BGR2HSV);

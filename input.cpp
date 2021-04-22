@@ -7,22 +7,19 @@
 using namespace std;
 using namespace cv;
 
-void checkNumArgs(int numArgs, char* progName){
+void checkNumArgs(int targNum, int realNum, char* usageMessage){
 
-    if(numArgs != 4){
+    if(realNum != targNum){
 
         cout
             << "Usage:\n  "
-            << progName << " ksize origin destination\n"
-            << "    ksize: positive integer size of filter window\n"
-            << "    origin: path of image to be smoothed\n"
-            << "    destination: path to write result to"
+            << usageMessage
             << endl;
         exit(1);
     }
 }
 
-int parseKsize(char *arg){
+int parsePosInt(char *arg){
 
     int size;
     try{
