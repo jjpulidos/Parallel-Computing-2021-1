@@ -13,29 +13,55 @@ Implementaciones secuencial y paralelizada (mediante `pthread`) del filtro de me
   * `cmake` 
   * `python` para ejecutar el script que prueba todos los tamaños e usos de hilos
 
-## Uso
+## Para compilar:
 
-Para compilar:
+### Usando Make
+  ```sh
+  $ make # compila el programa secuencial y el programa con hilos
+  $ make d #compila con simbolos de debugging
+  $ make all #preserva archivos objeto
+  ```
+  
+  Para ejecutar:
+  
+  Algoritmo secuencial con ventana de filtro de 5 pixeles de lado. Lee la imagen en `in/img.jpg` y escribe el resultado en `out/img.jpg`.
+  ```sh
+  $ ./sequential 5 in/img.jpg out/img.jpg
+  ```
+  
+  Algoritmo paralelo con ventana de filtro de 5 pixeles de lado, haciendo uso de 4 hilos `POSIX`. Lee la imagen en `in/img.jpg` y escribe el resultado en `out/img.jpg`.
+  ```sh
+  $ ./paralel 5 4 in/img.jpg out/img.jpg
+  ```
+  
+  Script que transforma todas las imagenes presentes en el directorio `in`, haciendo uso de 1, 2, 4, 8 y 16 hilos, y registrando el tiempo tomado por cada coombinación de parámetros en el archivo `log.txt`.
+  ```sh
+  $ python script_ejecutar_todo.py
+  $ cat log.txt
+  ```
+
+### Usando CMake y Clion
+
+Verifica que en CMakeLists.txt en la linea 3 este correctamente configurado el directorio de OpenCV
+
 ```sh
-$ make # compila el programa secuencial y el programa con hilos
-$ make d #compila con simbolos de debugging
-$ make all #preserva archivos objeto
+set(OpenCV_DIR /Users/<your-username>/Path-to-OpenCV)
 ```
 
-Para ejecutar:
+Si vas a Construir el proyecto Sequencial entonces cambia la linea 9
 
-Algoritmo secuencial con ventana de filtro de 5 pixeles de lado. Lee la imagen en `in/img.jpg` y escribe el resultado en `out/img.jpg`.
 ```sh
-$ ./sequential 5 in/img.jpg out/img.jpg
+add_executable(Parallel-Computing-2021-1 input.cpp image-effect-<par o seq>.cpp )
 ```
 
-Algoritmo paralelo con ventana de filtro de 5 pixeles de lado, haciendo uso de 4 hilos `POSIX`. Lee la imagen en `in/img.jpg` y escribe el resultado en `out/img.jpg`.
-```sh
-$ ./paralel 5 4 in/img.jpg out/img.jpg
-```
+Como fue añadido en el .gitgnore que no se guardara la carpeta **cmake-build-debug**, entonces necesitaras configurar el
+proyecto con click derecho en el proyecto (Clion) y "Reload CMake Project", el cual creará la carpet necesaria donde se
+encontrarán los ejecutables despues de hacer build.
 
-Script que transforma todas las imagenes presentes en el directorio `in`, haciendo uso de 1, 2, 4, 8 y 16 hilos, y registrando el tiempo tomado por cada coombinación de parámetros en el archivo `log.txt`.
+Finalmente se ejecutarían reemplazando de los comandos con Make "./paralel" por "cmake-build-debug/Parallel-Computing-2021-1"
+
+por ejemplo: 
+
 ```sh
-$ python script_ejecutar_todo.py
-$ cat log.txt
+cmake-build-debug/Parallel-Computing-2021-1 5 4  lena.jpeg lenaExport2.jpg
 ```

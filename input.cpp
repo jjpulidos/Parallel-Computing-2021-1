@@ -9,6 +9,8 @@ using namespace cv;
 
 void checkNumArgs(int targNum, int realNum, char* usageMessage){
 
+    // Check the Number of Arguments
+
     if(realNum != targNum){
 
         cout
@@ -20,6 +22,8 @@ void checkNumArgs(int targNum, int realNum, char* usageMessage){
 }
 
 int parsePosInt(char *arg){
+
+    // Parsing from String to Integer
 
     int size;
     try{
@@ -42,6 +46,7 @@ int parsePosInt(char *arg){
 
 Mat getImg(char *filename){
 
+    // Get the Image Using OpenCV, returns a  cv::Mat
     Mat image = imread(filename, IMREAD_COLOR); // Load an image
     if(image.empty()){
 
@@ -54,6 +59,8 @@ Mat getImg(char *filename){
 }
 
 void putImg(Mat image, char *filename){
+
+    // Write a image in a png file using compression in the path specified in filename variable
 
     vector<int> compression_params;
     compression_params.push_back(IMWRITE_PNG_COMPRESSION);
