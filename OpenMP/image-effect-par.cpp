@@ -2,6 +2,7 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
+#include <omp.h>
 #include <fstream>
 #include <sstream>
 #include "input.hpp"
@@ -40,12 +41,12 @@ vector<uchar> medianFilterWindow(int i, int j){
     return pixels;
 }
 
-void* medianFilter(void* id){
+void* medianFilter(int thread_id){
 
     //  Median Filter Function
 
     // Get the numbers of iterations depending of the numbers of rows and number of threads
-    int thread_id = *(int*) id;
+    //int thread_id = *(int*) id;
     int n = new_h.rows/ total_threads;
     int start = n * thread_id - ksize;
     int end = start + n;
@@ -108,15 +109,11 @@ int main (int argc, char *argv[]) {
     // Start timing
     auto start = high_resolution_clock::now();
 
-    // Threads Creation
-    for(int i = 0; i < total_threads; i++){
-        threadId[i] = i;
-        pthread_create(&thread[i], NULL, medianFilter, &threadId[i]);
-    }
-    
-    //Join Threads
-    for(int i = 0; i < total_threads; i++){
-        pthread_join(thread[i], NULL);
+    //parallel processing
+    #pragma omp parallel for
+    for(int i = 0; i < total_threads; i++) {
+
+        medianFilter(i);
     }
 
     // End timing

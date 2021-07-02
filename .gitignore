@@ -77,3 +77,9 @@ sequential
 
 *.png
 *.txt
+
+/*/out_*
+
+.vscode
+
+/*/.vscode
