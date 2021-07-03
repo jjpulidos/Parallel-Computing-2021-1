@@ -10,7 +10,7 @@ PAR = paralel
 #compiler, compile flags, linking flags
 CC = g++
 OPTS = -I /usr/local/include/opencv4/ -Wall -Wno-return-type -fopenmp #-O
-LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -pthread -fopenmp
+LIBS = -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -fopenmp
 
 OBJS_SEQ = $(SRCS_SEQ:.cpp=.o)
 OBJS_PAR = $(SRCS_PAR:.cpp=.o)

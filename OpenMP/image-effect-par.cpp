@@ -15,7 +15,6 @@ Mat img_hsv,img, new_h, new_s, new_v, dst_h, dst_s, dst_v;
 int total_threads;
 int ksize;
 vector<pair<int, int>> delta;
-int* response;
 
 vector<uchar> medianFilterWindow(int i, int j){
 
@@ -41,12 +40,10 @@ vector<uchar> medianFilterWindow(int i, int j){
     return pixels;
 }
 
-void* medianFilter(int thread_id){
+void medianFilter(int thread_id){
 
     //  Median Filter Function
 
-    // Get the numbers of iterations depending of the numbers of rows and number of threads
-    //int thread_id = *(int*) id;
     int n = new_h.rows/ total_threads;
     int start = n * thread_id - ksize;
     int end = start + n;
@@ -60,7 +57,7 @@ void* medianFilter(int thread_id){
         for(int j = 0; j < new_h.cols - ksize - 1; j++){
 
             pixels = medianFilterWindow(i, j);
-            
+
             dst_h.at<uchar>(i, j) = pixels[0];
             dst_s.at<uchar>(i, j) = pixels[1];
             dst_v.at<uchar>(i, j) = pixels[2];
@@ -101,10 +98,6 @@ int main (int argc, char *argv[]) {
     dst_h = new_h.clone();
     dst_s = new_s.clone();
     dst_v = new_v.clone();
-
-    //Thread variables
-    int threadId[total_threads];
-    pthread_t thread[total_threads];
 
     // Start timing
     auto start = high_resolution_clock::now();
