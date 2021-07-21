@@ -20,77 +20,43 @@ int total_threads;
 int ksize;
 vector<pair<int, int>> delta;
 
-vector<uchar> medianFilterWindow(int i, int j) {
+__global__ void median_filter_thread(const uchar *inputImageKernel,
+                                     uchar *outputImagekernel,
+                                     const int imageWidth,
+                                     const int imageHeight) {
+  // Set row and colum for thread.
+  int WINDOW_SIZE = 3;
+  int row = blockIdx.y * blockDim.y + threadIdx.y;
+  int col = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned char filterVector[9] = {0, 0, 0, 0, 0,
+                                   0, 0, 0, 0}; // Take fiter window
 
-  // Median Calculations for a window of ksize x ksize
-
-  vector<uchar> pixelH(ksize * ksize);
-  vector<uchar> pixelS(ksize * ksize);
-  vector<uchar> pixelV(ksize * ksize);
-
-  for (int k = 0; k < ksize * ksize; ++k) {
-    pixelH[k] = new_h.at<uchar>(i + delta[k].first, j + delta[k].second);
-    pixelS[k] = new_s.at<uchar>(i + delta[k].first, j + delta[k].second);
-    pixelV[k] = new_v.at<uchar>(i + delta[k].first, j + delta[k].second);
-  }
-
-  // Sorting those windows
-  sort(pixelH.begin(), pixelH.end());
-  sort(pixelS.begin(), pixelS.end());
-  sort(pixelV.begin(), pixelV.end());
-
-  // Getting the n/2 element (Median) after sorting for every HSV channel
-  vector<uchar> pixels = {pixelH[(ksize * ksize) / 2],
-                          pixelS[(ksize * ksize) / 2],
-                          pixelV[(ksize * ksize) / 2]};
-  return pixels;
-}
-__global__ void blur_thread(const int *d_image, const int width,
-                            const int height, const int kernel,
-                            const int total_threads, int *d_blur) {
-
-  /* 	int id = blockDim.x * blockIdx.x + threadIdx.x; */
-  /* 	int ir = id * ( height / total_threads ); */
-  /* 	int fr = (id + 1) * ( height / total_threads ); */
-  /*  */
-  /* 	if(id < height){ */
-  /* 		for(int i=0; i<width; i++){ */
-  /* 			for(int j=ir; j<fr; j++){ */
-  /* 				//d_blur[j+i*height] = d_image[j+i*height];; */
-  /* 				d_blur[j+i*height] = cal_intensity(d_image, i,
-   * j, width, height, kernel); */
-  /* 				//d_blur[j*width+i] = cal_intensity(d_image, i,
-   * j, width, height, kernel); */
-  /* 				//d_blur[j+i*height] = d_image[j+i*height]; */
-  /* 				//d_blur[j+i*height] = d_image[j+i*height]; */
-  /* 			} */
-  /* 		} */
-  /* 	} */
-}
-
-void medianFilter(int thread_id) {
-
-  //  Median Filter Function
-
-  int n = new_h.rows / total_threads;
-  int start = n * thread_id - ksize;
-  int end = start + n;
-  start = start < 0 ? 0 : start;
-
-  // Vector of pixels for every median window calculations for HSV channels
-  vector<uchar> pixels = {new_h.at<uchar>(1, 1), new_s.at<uchar>(1, 1),
-                          new_v.at<uchar>(1, 1)};
-
-  for (int i = start; i < end; i++) {
-
-    for (int j = 0; j < new_h.cols - ksize - 1; j++) {
-
-      pixels = medianFilterWindow(i, j);
-
-      dst_h.at<uchar>(i, j) = pixels[0];
-      dst_s.at<uchar>(i, j) = pixels[1];
-      dst_v.at<uchar>(i, j) = pixels[2];
+  if ((row == 0) || (col == 0) || (row == imageHeight - 1) ||
+      (col == imageWidth - 1)) {
+    outputImagekernel[row * imageWidth + col] =
+        0; // Deal with boundry conditions */
+  } else {
+    for (int x = 0; x < WINDOW_SIZE; x++) {
+      for (int y = 0; y < WINDOW_SIZE; y++) {
+        filterVector[x * WINDOW_SIZE + y] =
+            inputImageKernel[(row + x - 1) * imageWidth +
+                             (col + y - 1)]; // setup the filterign* window. */
+      }
     }
+    for (int i = 0; i < 9; i++) {
+      for (int j = i + 1; j < 9; j++) {
+        if (filterVector[i] > filterVector[j]) {
+          // Swap the variables.
+          char tmp = filterVector[i];
+          filterVector[i] = filterVector[j];
+          filterVector[j] = tmp;
+        }
+      }
+    }
+    /* outputImagekernel[row * imageWidth + col] = */
+    /*     filterVector[4]; // Set the* output variables. */
+    outputImagekernel[row * imageWidth + col] =
+        inputImageKernel[row * imageWidth + col];
   }
 }
 
@@ -103,59 +69,210 @@ int main(int argc, char *argv[]) {
   ksize = parsePosInt(argv[1]);
   total_threads = parsePosInt(argv[2]);
   img = getImg(argv[3]);
-  double matriz_h [img.rows][img.cols];
-  double matriz_s [img.rows][img.cols];
-  double matriz_v [img.rows][img.cols];
 
-  for(int i=0; i<img.rows; i++){
-    for(int j=0; j<img.cols; j++){
-      matriz_h[i][j] = img.at<Vec3b>(i, j)[0];
-      matriz_s[i][j] = img.at<Vec3b>(i, j)[1];
-      matriz_v[i][j] = img.at<Vec3b>(i, j)[2];
-    }
-  }
-
-  // Converting BGR default color mode to HSV in order to apply Median Filter
-  // Correctly Median Filter shouldnt be applied in RGB or BGR color modes
-  // because are not going to get the real Median between all the channels, If
-  // you are using a GrayScale Image is ok, but with Color Images you should do
-  // a HSV conversion
   cvtColor(img, img_hsv, COLOR_BGR2HSV);
   vector<Mat> hsvChannels(3);
   split(img_hsv, hsvChannels);
 
-  // Delta is a vector of the offset for the windowing, and depends of ksize
-  for (int i = 0; i < ksize; i++) {
-    for (int j = 0; j < ksize; j++) {
-      delta.push_back(make_pair(i, j));
-    }
+  Mat new_h = hsvChannels[0];
+  Mat new_s = hsvChannels[1];
+  Mat new_v = hsvChannels[2];
+
+  cudaEvent_t start_cu, stop_cu;
+  cudaEventCreate(&start_cu);
+  cudaEventCreate(&stop_cu);
+  cudaEventRecord(start_cu);
+
+  cudaError_t err = cudaSuccess;
+
+  // flatten the mat.
+  uint totalElements = img.total(); // Note: image.total() == rows*cols.
+  Mat flat_h =
+      new_h.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
+  Mat flat_s =
+      new_s.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
+  Mat flat_v =
+      new_v.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
+
+  if (!new_h.isContinuous()) {
+    flat_h = flat_h.clone(); // O(N),
+  }
+  if (!new_s.isContinuous()) {
+    flat_s = flat_s.clone(); // O(N),
+  }
+  if (!new_v.isContinuous()) {
+    flat_v = flat_v.clone(); // O(N),
   }
 
-  new_h = hsvChannels[0];
-  new_s = hsvChannels[1];
-  new_v = hsvChannels[2];
+  // flat.data is your array pointer
+  auto *h_img_or_h = flat_h.data; // usually, its uchar*
+  auto *h_img_or_s = flat_s.data; // usually, its uchar*
+  auto *h_img_or_v = flat_v.data; // usually, its uchar*
+  // You have your array, its length is flat.total() [rows=1,
+  // cols=totalElements] Converting to vector
+  /* std::vector<uchar> vec(flat.data, flat.data + flat.total()); */
 
-  // Instead of using malloc/free we drawn on C++ Memory Management and
-  // functions like "clone" in OpenCV  library
-  dst_h = new_h.clone();
-  dst_s = new_s.clone();
-  dst_v = new_v.clone();
+  /*
+   *
+      for (vector<uchar>::const_iterator i = vec.begin(); i != vec.end(); ++i)
+          cout << *i << ' ';
+  Mat restored = Mat(img.rows, img.cols, img.type(), ptr);
+          */
+  size_t size = flat_h.total() * sizeof(uchar);
+
+  uchar *d_img_or_h = NULL;
+  err = cudaMalloc((void **)&d_img_or_h, size);
+
+  if (err != cudaSuccess) {
+    cout << "Error separando espacio imagen normal en GPU "
+         << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  uchar *d_img_or_s = NULL;
+  err = cudaMalloc((void **)&d_img_or_s, size);
+
+  if (err != cudaSuccess) {
+    cout << "Error separando espacio imagen normal en GPU "
+         << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  uchar *d_img_or_v = NULL;
+  err = cudaMalloc((void **)&d_img_or_v, size);
+
+  if (err != cudaSuccess) {
+    cout << "Error separando espacio imagen normal en GPU "
+         << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  uchar *d_img_mf_h = NULL;
+
+  err = cudaMalloc((void **)&d_img_mf_h, size);
+  if (err != cudaSuccess) {
+    cout << "Error separando espacio imagen normal en GPU 2"
+         << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  uchar *d_img_mf_s = NULL;
+
+  err = cudaMalloc((void **)&d_img_mf_s, size);
+  if (err != cudaSuccess) {
+    cout << "Error separando espacio imagen normal en GPU 2"
+         << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  uchar *d_img_mf_v = NULL;
+
+  err = cudaMalloc((void **)&d_img_mf_v, size);
+  if (err != cudaSuccess) {
+    cout << "Error separando espacio imagen normal en GPU 2"
+         << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  uchar *h_img_mf_h = (uchar *)malloc(size);
+  uchar *h_img_mf_s = (uchar *)malloc(size);
+  uchar *h_img_mf_v = (uchar *)malloc(size);
 
   // Start timing
   auto start = high_resolution_clock::now();
 
-// parallel processing
-#pragma omp parallel for
-  for (int i = 0; i < total_threads; i++) {
+  // MemoryCopy
+  // Imagen
+  err = cudaMemcpy(d_img_or_h, h_img_or_h, size, cudaMemcpyHostToDevice);
+  if (err != cudaSuccess) {
+    cout << "Error copiando datos a GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+  err = cudaMemcpy(d_img_or_s, h_img_or_s, size, cudaMemcpyHostToDevice);
+  if (err != cudaSuccess) {
+    cout << "Error copiando datos a GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+  err = cudaMemcpy(d_img_or_v, h_img_or_v, size, cudaMemcpyHostToDevice);
+  if (err != cudaSuccess) {
+    cout << "Error copiando datos a GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
 
-    medianFilter(i);
+  // Lanzar GPU
+  int blocksPerGrid = 10;
+  int num_threads = 128;
+
+  median_filter_thread<<<blocksPerGrid, num_threads>>>(d_img_or_h, d_img_mf_h,
+                                                       img.rows, img.cols);
+
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+    cout << "Fallo al lanzar Kernel de GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+  median_filter_thread<<<blocksPerGrid, num_threads>>>(d_img_or_s, d_img_mf_s,
+                                                       img.rows, img.cols);
+
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+    cout << "Fallo al lanzar Kernel de GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+  median_filter_thread<<<blocksPerGrid, num_threads>>>(d_img_or_v, d_img_mf_v,
+                                                       img.rows, img.cols);
+
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+    cout << "Fallo al lanzar Kernel de GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+  cudaDeviceSynchronize();
+
+  err = cudaMemcpy(h_img_mf_h, d_img_mf_h, size, cudaMemcpyDeviceToHost);
+  if (err != cudaSuccess) {
+    cout << "Error copiando datos a GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+  err = cudaMemcpy(h_img_mf_s, d_img_mf_s, size, cudaMemcpyDeviceToHost);
+  if (err != cudaSuccess) {
+    cout << "Error copiando datos a GPU " << cudaGetErrorString(err) << endl;
+    return -1;
+  }
+
+  err = cudaMemcpy(h_img_mf_v, d_img_mf_v, size, cudaMemcpyDeviceToHost);
+  if (err != cudaSuccess) {
+    cout << "Error copiando datos a GPU " << cudaGetErrorString(err) << endl;
+    return -1;
   }
 
   // End timing
   auto end = high_resolution_clock::now();
+  /* Mat restored = Mat(img.rows, img.cols, img.type(), h_img_mf); */
+  /* vector<uchar> vec(h_img_mf, h_img_mf + flat.total()); */
+
+  /* for (vector<uchar>::const_iterator i = vec.begin(); i != vec.end(); ++i) */
+  /* cout << (uchar)*i << ' '; */
+  /* putImg(restored, argv[4]); */
+
+  // Delta is a vector of the offset for the windowing, and depends of ksize
+  /* for (int i = 0; i < ksize; i++) { */
+  /*   for (int j = 0; j < ksize; j++) { */
+  /*     delta.push_back(make_pair(i, j)); */
+  /*   } */
+  /* } */
+
   duration<double, milli> total_time = (end - start);
   cout << "time    = " << total_time.count() / 1000 << '\n';
 
+  Mat dst_h = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_h);
+  Mat dst_s = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_s);
+  Mat dst_v = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_v);
+
+  vector<uchar> vec(h_img_mf_h, h_img_mf_h + flat_h.total());
+
+  for (vector<uchar>::const_iterator i = vec.begin(); i != vec.end(); ++i)
+    cout << (uchar)*i << ' ';
   // After applied MedianFilter for each channel, were merged due to build the
   // Image Again
   vector<Mat> channels = {dst_h, dst_s, dst_v};
@@ -166,5 +283,20 @@ int main(int argc, char *argv[]) {
   cvtColor(merged, filtered, COLOR_HSV2BGR);
 
   // Saving Image results
-  /* putImg(filtered, argv[4]); */
+  putImg(filtered, argv[4]);
+  cudaEventRecord(stop_cu);
+  cudaEventSynchronize(stop_cu);
+
+  cudaFree(d_img_or_h);
+  cudaFree(d_img_or_s);
+  cudaFree(d_img_or_v);
+  cudaFree(d_img_mf_h);
+  cudaFree(d_img_mf_s);
+  cudaFree(d_img_mf_v);
+  /* free(h_img_or_h); */
+  /* free(h_img_or_s); */
+  /* free(h_img_or_v); */
+  free(h_img_mf_h);
+  free(h_img_mf_s);
+  free(h_img_mf_v);
 }
