@@ -4,11 +4,11 @@ from os import system as do
 logfile = "log.txt"
 
 sizes = ["720p", "1080p", "4k"]
-threads = [1, 2, 4, 8, 16]
+blocks = [1, 2, 5, 10, 20, 30]
 
 do("mkdir in 2>/dev/null")
-for t_num in threads:
-  do(f"mkdir out_{t_num} 2>/dev/null")
+for t_num in blocks:
+    do(f"mkdir out_{t_num} 2>/dev/null")
 
 do("make")
 
@@ -18,26 +18,20 @@ do(f"echo 'run at {date}' >> {logfile}")
 print()
 for size in sizes:
 
-  print(f"\nsmoothing image of size {size}")
-  
-  log_fname = f"result_{size}.txt"
-  in_fname = f"in/sana_noise{size}.jpg"
-  
-  do(f"echo __________ >> {logfile}")
-  do(f"echo img size: {size} >> {logfile}")
-  for t_num in threads:
-  
-    print(f"  with threads = {t_num}")
-  
-    do(f"echo .......... >> {logfile}")
-    do(f"echo 'threads = {t_num}' >> {logfile}")
-    out_fname = f"out_{t_num}/sana_smoothed{size}.jpg"
-    if t_num > 1:
-      do(f"./paralel 5 {t_num} {in_fname} {out_fname} >> {logfile}")
-    else:
-      do(f"./sequential 5 {in_fname} {out_fname} >> {logfile}")
-      
-do(f"echo ========== >> {logfile}")
-  
-    
+    print(f"\nsmoothing image of size {size}")
 
+    log_fname = f"result_{size}.txt"
+    in_fname = f"in/sana_noise{size}.jpg"
+
+    do(f"echo __________ >> {logfile}")
+    do(f"echo img size: {size} >> {logfile}")
+    for t_num in blocks:
+
+        print(f"  with block= {t_num}")
+
+        do(f"echo .......... >> {logfile}")
+        do(f"echo 'block = {t_num}' >> {logfile}")
+        out_fname = f"out_{t_num}/sana_smoothed{size}.jpg"
+        do(f"./cuda {t_num} {in_fname} {out_fname} 0 0 >> {logfile}")
+
+do(f"echo ========== >> {logfile}")

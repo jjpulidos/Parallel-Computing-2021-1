@@ -26,7 +26,7 @@ int parsePosInt(char *arg) {
   try {
 
     size = stoi(string(arg));
-    if (size < 1) {
+    if (size < 0) {
 
       throw invalid_argument("");
     }
