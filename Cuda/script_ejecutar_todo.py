@@ -7,8 +7,8 @@ sizes = ["720p", "1080p", "4k"]
 blocks = [1, 2, 5, 10, 20, 30]
 
 do("mkdir in 2>/dev/null")
-for t_num in blocks:
-    do(f"mkdir out_{t_num} 2>/dev/null")
+# for t_num in blocks:
+#     do(f"mkdir out_{t_num} 2>/dev/null")
 
 do("make")
 
@@ -32,6 +32,17 @@ for size in sizes:
         do(f"echo .......... >> {logfile}")
         do(f"echo 'block = {t_num}' >> {logfile}")
         out_fname = f"out_{t_num}/sana_smoothed{size}.jpg"
-        do(f"./cuda {t_num} {in_fname} {out_fname} 0 0 >> {logfile}")
+        # do(f"./cuda {t_num} {in_fname} {out_fname} 0 0 >> {logfile}")
+        #Promedio
+        nums = 10
+        while nums > 0:
+            do(f"./cuda {t_num} {in_fname} {out_fname} 0 0 >> logtpm.txt")
+            nums = nums - 1
+        file = open("logtpm.txt", "r+")
+        l = list(map(float, file.read().splitlines()))
+        file.seek(0)
+        file.truncate()
+        avg = sum(l) / len(l)
+        do(f"echo 'time = {avg}' >> {logfile}")
 
 do(f"echo ========== >> {logfile}")

@@ -83,3 +83,7 @@ sequential
 .vscode
 
 /*/.vscode
+Cuda/.clang-format
+Cuda/cuda
+OpenMP/.clang-format
+POSIX/.clang-format

@@ -25,7 +25,7 @@ __global__ void median_filter_thread(const uchar *inputImageKernel,
                                      const int imageWidth,
                                      const int imageHeight) {
   // Set row and colum for thread.
-  int WINDOW_SIZE = 3;
+  int WINDOW_SIZE = 5;
   int row = blockIdx.y * blockDim.y + threadIdx.y;
   int col = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned char filterVector[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -241,24 +241,25 @@ int main(int argc, char *argv[]) {
   }
 
   duration<double, milli> total_time = (end - start);
-  cout << "time    = " << total_time.count() / 1000 << '\n';
+  /* cout << "time    = " << total_time.count() / 1000 << '\n'; */
+  cout << total_time.count() / 1000 << '\n';
 
-  Mat dst_h = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_h);
-  Mat dst_s = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_s);
-  Mat dst_v = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_v);
-
-  vector<uchar> vec(h_img_mf_h, h_img_mf_h + flat_h.total());
-
-  // After applied MedianFilter for each channel, were merged due to build the
-  // Image Again
-  vector<Mat> channels = {dst_h, dst_s, dst_v};
-  Mat merged, filtered;
-  merge(channels, merged);
-
-  // Changing HSV mode color to BGR again
-  cvtColor(merged, filtered, COLOR_HSV2BGR);
-
-  putImg(filtered, argv[3]);
+/*   Mat dst_h = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_h); */
+/*   Mat dst_s = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_s); */
+/*   Mat dst_v = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_v); */
+/*  */
+/*   vector<uchar> vec(h_img_mf_h, h_img_mf_h + flat_h.total()); */
+/*  */
+/*   // After applied MedianFilter for each channel, were merged due to build the */
+/*   // Image Again */
+/*   vector<Mat> channels = {dst_h, dst_s, dst_v}; */
+/*   Mat merged, filtered; */
+/*   merge(channels, merged); */
+/*  */
+/*   // Changing HSV mode color to BGR again */
+/*   cvtColor(merged, filtered, COLOR_HSV2BGR); */
+/*  */
+/*   putImg(filtered, argv[3]); */
 
   // Saving Image results
   cudaFree(d_img_or_h);
