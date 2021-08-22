@@ -69,7 +69,14 @@ Mat runMedianFilte(const cv::Mat &img) {
   return filtered;
 }
 
-int main() {
+int main(int argc, char **argv) {
+
+  MPI_Init(&argc, &argv);
+
+  int process_id, num_procs;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &process_id);
+
   Mat image;
 
   image = imread("../in/sana_noise720p.jpg", IMREAD_COLOR);
@@ -86,17 +93,30 @@ int main() {
 
   cv ::Size smallSize(width / 5, height);
 
-  std ::vector<Mat> smallImages;
+  std ::vector<float *> smallImages;
+
+  int *dimensions = (int *)malloc(sizeof(int) * 5);
+  /* for (int i = 0; i < 5; i++) { */
+  /*   dimensions[i] = i * width / 5; */
+  /* } */
 
   for (int x = 0; x < image.cols; x += smallSize.width) {
     cv ::Rect rect = cv ::Rect(x, 0, smallSize.width, smallSize.height);
     Mat img = cv ::Mat(image, rect);
-    smallImages.push_back(runMedianFilte(img));
+    smallImages.push_back((float *)img.data);
   }
-  cv::Mat combined;
-  printf("smallImages size %ld", smallImages.size());
-  cv::hconcat(smallImages, combined);
-  imwrite("salida.jpg", combined);
+  float **smallImagesPointer = smallImages.data();
+  float *buffer = (float *)malloc(sizeof(float) * (width / 5) * height * 3);
+  MPI_Scatter(smallImagesPointer, (width / 5) * height * 3, MPI_FLOAT, buffer,
+              (width / 5) * height * 3, MPI_FLOAT, 0, MPI_COMM_WORLD);
+  if (process_id == 0) {
+    cv::Mat combined(height, width / 5, CV_32FC3, buffer);
+    imwrite("salidaprueba.jpg", combined);
+  }
+  /* cv::Mat combined; */
+  /* printf("smallImages size %ld", smallImages.size()); */
+  /* cv::hconcat(smallImages, combined); */
+  /* imwrite("salida.jpg", combined); */
 
   return 0;
 }
