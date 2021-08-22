@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <mpi.h>
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -101,18 +102,15 @@ int main(int argc, char **argv) {
                              smallSize.height);
   Mat img = cv ::Mat(image, rect);
   Mat imgFiltered = runMedianFilte(img);
-  imwrite("prueba" + process_id.to_string() + ".jpg", imgFiltered)
+  imwrite("prueba" + to_string(process_id) + ".jpg", imgFiltered);
 
-      /*     if (process_id != 0) { */
-      /*   MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0,
-         MPI_COMM_WORLD); */
-      /*   /* printf("se ha enviado desde el process_id %d\n", process_id); */
-      * /
-      /* } */
-      /* cv::Mat combined; */
-      /* printf("smallImages size %ld", smallImages.size()); */
-      /* cv::hconcat(smallImages, combined); */
-      /* imwrite("salida.jpg", combined); */
-      MPI_Finalize();
+  /*     if (process_id != 0) { */
+  /*   MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0,
+     MPI_COMM_WORLD); */
+  /* cv::Mat combined; */
+  /* printf("smallImages size %ld", smallImages.size()); */
+  /* cv::hconcat(smallImages, combined); */
+  /* imwrite("salida.jpg", combined); */
+  MPI_Finalize();
   return 0;
 }
