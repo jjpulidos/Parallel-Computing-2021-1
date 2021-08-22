@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
       /* printf("Recived data from process %d\n", j); */
       /* imwrite("prueba" + to_string(j) + ".jpg", imgrecive); */
     }
-    Mat combined;
+    Mat combined(width, height, CV_8UC3);
     cv::hconcat(smallImages, combined);
     imwrite("salida.jpg", combined);
   }
