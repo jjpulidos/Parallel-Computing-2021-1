@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
 
   int process_id, num_procs;
+  MPI_Status status;
   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
   MPI_Comm_rank(MPI_COMM_WORLD, &process_id);
 
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
 
   printf("Processing a %dx%d image\n", height, width);
 
-  cv ::Size smallSize(width / 5, height);
+  cv ::Size smallSize(width / num_procs, height);
 
   std ::vector<float *> smallImages;
 
@@ -102,12 +103,20 @@ int main(int argc, char **argv) {
                              smallSize.height);
   Mat img = cv ::Mat(image, rect);
   Mat imgFiltered = runMedianFilte(img);
-  imwrite("prueba" + to_string(process_id) + ".jpg", imgFiltered);
 
-  /*     if (process_id != 0) { */
-  /*   MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0,
-     MPI_COMM_WORLD); */
-  /* cv::Mat combined; */
+  if (process_id != 0) {
+    MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0, MPI_COMM_WORLD);
+    /* cv::Mat combined; */
+  } else {
+    for (int j = 1; j < num_procs; j++) {
+      // printf("Ready to recive from process %d\n", j);
+      cv::Mat imgrecive;
+      MPI_Recv(imgrecive.data, size, MPI_UNSIGNED_CHAR, j, 0, MPI_COMM_WORLD,
+               &status);
+      // printf("Recived data from process %d\n", j);
+      imwrite("prueba" + to_string(process_id) + ".jpg", imgrecive);
+    }
+  }
   /* printf("smallImages size %ld", smallImages.size()); */
   /* cv::hconcat(smallImages, combined); */
   /* imwrite("salida.jpg", combined); */
