@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
   // get the image data
   int height = image.rows;
   int width = image.cols;
+  int size = (height * width * 3) / (num_procs) + 1;
 
   printf("Processing a %dx%d image\n", height, width);
 
@@ -95,28 +96,42 @@ int main(int argc, char **argv) {
 
   std ::vector<float *> smallImages;
 
-  int *dimensions = (int *)malloc(sizeof(int) * 5);
-  /* for (int i = 0; i < 5; i++) { */
-  /*   dimensions[i] = i * width / 5; */
-  /* } */
+  cv ::Rect rect = cv ::Rect(process_id * smallSize.width, 0, smallSize.width,
+                             smallSize.height);
+  Mat img = cv ::Mat(image, rect);
+  Mat imgFiltered = runMedianFilte(img);
 
-  for (int x = 0; x < image.cols; x += smallSize.width) {
-    cv ::Rect rect = cv ::Rect(x, 0, smallSize.width, smallSize.height);
-    Mat img = cv ::Mat(image, rect);
-    smallImages.push_back((float *)img.data);
+  if (process_id != 0) {
+    MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0, MPI_COMM_WORLD);
+    printf("se ha enviado desde el process_id %d\n", process_id);
   }
-  float **smallImagesPointer = smallImages.data();
-  float *buffer = (float *)malloc(sizeof(float) * (width / 5) * height * 3);
-  MPI_Scatter(smallImagesPointer, (width / 5) * height * 3, MPI_FLOAT, buffer,
-              (width / 5) * height * 3, MPI_FLOAT, 0, MPI_COMM_WORLD);
-  if (process_id == 0) {
-    cv::Mat combined(height, width / 5, CV_32FC3, buffer);
-    imwrite("salidaprueba.jpg", combined);
-  }
-  /* cv::Mat combined; */
-  /* printf("smallImages size %ld", smallImages.size()); */
-  /* cv::hconcat(smallImages, combined); */
-  /* imwrite("salida.jpg", combined); */
 
-  return 0;
+  /*   int *dimensions = (int *)malloc(sizeof(int) * 5); */
+  /*   /* for (int i = 0; i < 5; i++) { */ * /
+      /*   /*   dimensions[i] = i * width / 5; */ * /
+      /*   /* } */ * /
+      /*  */
+      /*   for (int x = 0; x < image.cols; x += smallSize.width) { */
+      /*     cv ::Rect rect = cv ::Rect(x, 0, smallSize.width,
+         smallSize.height); */
+      /*     Mat img = cv ::Mat(image, rect); */
+      /*     smallImages.push_back((float *)img.data); */
+      /*   } */
+      /*   float **smallImagesPointer = smallImages.data(); */
+      /*   float *buffer = (float *)malloc(sizeof(float) * (width / 5) * height
+       * 3); */
+      /*   MPI_Scatter(smallImagesPointer, (width / 5) * height * 3, MPI_FLOAT,
+         buffer, */
+      /*               (width / 5) * height * 3, MPI_FLOAT, 0, MPI_COMM_WORLD);
+       */
+      /*   if (process_id == 0) { */
+      /*     cv::Mat combined(height, width / 5, CV_32FC3, buffer); */
+      /*     imwrite("salidaprueba.jpg", combined); */
+      /*   } */
+      /* cv::Mat combined; */
+      /* printf("smallImages size %ld", smallImages.size()); */
+      /* cv::hconcat(smallImages, combined); */
+      /* imwrite("salida.jpg", combined); */
+
+      return 0;
 }
