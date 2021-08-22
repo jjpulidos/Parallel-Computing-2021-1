@@ -8,6 +8,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <mpi.h>
 
 using namespace std;
 using namespace cv;
@@ -79,7 +80,7 @@ int main(int argc, char **argv) {
 
   Mat image;
 
-  image = imread("../in/sana_noise720p.jpg", IMREAD_COLOR);
+  image = imread("in/sana_noise720p.jpg", IMREAD_COLOR);
   if (image.empty()) {
     cout << "Could not open or find the image" << std::endl;
     return -1;
@@ -100,38 +101,18 @@ int main(int argc, char **argv) {
                              smallSize.height);
   Mat img = cv ::Mat(image, rect);
   Mat imgFiltered = runMedianFilte(img);
+  imwrite("prueba" + process_id.to_string() + ".jpg", imgFiltered)
 
-  if (process_id != 0) {
-    MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0, MPI_COMM_WORLD);
-    printf("se ha enviado desde el process_id %d\n", process_id);
-  }
-
-  /*   int *dimensions = (int *)malloc(sizeof(int) * 5); */
-  /*   /* for (int i = 0; i < 5; i++) { */ * /
-      /*   /*   dimensions[i] = i * width / 5; */ * /
-      /*   /* } */ * /
-      /*  */
-      /*   for (int x = 0; x < image.cols; x += smallSize.width) { */
-      /*     cv ::Rect rect = cv ::Rect(x, 0, smallSize.width,
-         smallSize.height); */
-      /*     Mat img = cv ::Mat(image, rect); */
-      /*     smallImages.push_back((float *)img.data); */
-      /*   } */
-      /*   float **smallImagesPointer = smallImages.data(); */
-      /*   float *buffer = (float *)malloc(sizeof(float) * (width / 5) * height
-       * 3); */
-      /*   MPI_Scatter(smallImagesPointer, (width / 5) * height * 3, MPI_FLOAT,
-         buffer, */
-      /*               (width / 5) * height * 3, MPI_FLOAT, 0, MPI_COMM_WORLD);
-       */
-      /*   if (process_id == 0) { */
-      /*     cv::Mat combined(height, width / 5, CV_32FC3, buffer); */
-      /*     imwrite("salidaprueba.jpg", combined); */
-      /*   } */
+      /*     if (process_id != 0) { */
+      /*   MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0,
+         MPI_COMM_WORLD); */
+      /*   /* printf("se ha enviado desde el process_id %d\n", process_id); */
+      * /
+      /* } */
       /* cv::Mat combined; */
       /* printf("smallImages size %ld", smallImages.size()); */
       /* cv::hconcat(smallImages, combined); */
       /* imwrite("salida.jpg", combined); */
-
-      return 0;
+      MPI_Finalize();
+  return 0;
 }
