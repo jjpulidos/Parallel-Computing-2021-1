@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
       cv::Mat imgrecive(smallSize.width, smallSize.height, CV_8UC3,
                         imgFilteredData);
       printf("Recived data from process %d\n", j);
-      imwrite("prueba" + to_string(process_id) + ".jpg", imgrecive);
+      imwrite("prueba" + to_string(j) + ".jpg", imgrecive);
     }
   }
   /* printf("smallImages size %ld", smallImages.size()); */
