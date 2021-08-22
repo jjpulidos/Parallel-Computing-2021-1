@@ -241,8 +241,8 @@ int main(int argc, char *argv[]) {
   }
 
   duration<double, milli> total_time = (end - start);
-  /* cout << "time    = " << total_time.count() / 1000 << '\n'; */
-  cout << total_time.count() / 1000 << '\n';
+  cout << "time    = " << total_time.count() / 1000 << '\n';
+  /* cout << total_time.count() / 1000 << '\n'; */
 
 /*   Mat dst_h = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_h); */
 /*   Mat dst_s = Mat(img.rows, img.cols, CV_8UC1, h_img_mf_s); */

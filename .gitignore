@@ -87,3 +87,4 @@ Cuda/.clang-format
 Cuda/cuda
 OpenMP/.clang-format
 POSIX/.clang-format
+MPI/.clang-format
