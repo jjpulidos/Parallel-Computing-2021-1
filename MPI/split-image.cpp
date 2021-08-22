@@ -103,21 +103,20 @@ int main(int argc, char **argv) {
                              smallSize.height);
   Mat img = cv ::Mat(image, rect);
   Mat imgFiltered = runMedianFilte(img);
+  uchar *imgFilteredData;
 
   if (process_id != 0) {
     MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0, MPI_COMM_WORLD);
-    printf("Ready to recive from process %d\n", process_id);
     /* cv::Mat combined; */
   } else {
-    /* for (int j = 1; j < num_procs; j++) { */
-    /*   // printf("Ready to recive from process %d\n", j); */
-    /*   cv::Mat imgrecive; */
-    /*   MPI_Recv(imgrecive.data, size, MPI_UNSIGNED_CHAR, j, 0, MPI_COMM_WORLD,
-     */
-    /*            &status); */
-    /*   // printf("Recived data from process %d\n", j); */
-    /*   imwrite("prueba" + to_string(process_id) + ".jpg", imgrecive); */
-    /* } */
+    for (int j = 1; j < num_procs; j++) {
+      // printf("Ready to recive from process %d\n", j);
+      cv::Mat imgrecive;
+      MPI_Recv(imgFilteredData, size, MPI_UNSIGNED_CHAR, j, 0, MPI_COMM_WORLD,
+               &status);
+      printf("Recived data from process %d\n", j);
+      /* imwrite("prueba" + to_string(process_id) + ".jpg", imgrecive); */
+    }
   }
   /* printf("smallImages size %ld", smallImages.size()); */
   /* cv::hconcat(smallImages, combined); */
