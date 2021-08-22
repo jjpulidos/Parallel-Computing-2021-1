@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
                              smallSize.height);
   Mat img = cv ::Mat(image, rect);
   Mat imgFiltered = runMedianFilte(img);
-  uchar *imgFilteredData;
+  uchar *imgFilteredData = (uchar *)malloc(sizeof(uchar) * size);
 
   if (process_id != 0) {
     MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0, MPI_COMM_WORLD);
