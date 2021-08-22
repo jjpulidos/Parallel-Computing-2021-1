@@ -13,6 +13,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace chrono;
 
 Mat img_hsv, img, new_h, new_s, new_v, dst;
 vector<pair<int, int>> delta;
@@ -72,7 +73,6 @@ Mat runMedianFilte(const cv::Mat &img) {
 }
 
 int main(int argc, char **argv) {
-
   MPI_Init(&argc, &argv);
 
   int process_id, num_procs;
@@ -81,8 +81,7 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &process_id);
 
   Mat image;
-
-  image = imread("in/sana_noise720p.jpg", IMREAD_COLOR);
+  image = imread(argv[1], IMREAD_COLOR);
   if (image.empty()) {
     cout << "Could not open or find the image" << std::endl;
     return -1;
@@ -93,8 +92,6 @@ int main(int argc, char **argv) {
   int width = image.cols;
   int size = (height * width * 3) / (num_procs) + 1;
 
-  printf("Processing a %dx%d image\n", height, width);
-
   cv ::Size smallSize(width / num_procs, height);
 
   std ::vector<Mat> smallImages;
@@ -102,29 +99,31 @@ int main(int argc, char **argv) {
   cv ::Rect rect = cv ::Rect(process_id * smallSize.width, 0, smallSize.width,
                              smallSize.height);
   Mat img = cv ::Mat(image, rect);
+
+  auto start = high_resolution_clock::now();
   Mat imgFiltered = runMedianFilte(img);
-  uchar *imgFilteredData = (uchar *)malloc(sizeof(uchar) * size);
 
   if (process_id != 0) {
     MPI_Send(imgFiltered.data, size, MPI_UNSIGNED_CHAR, 0, 0, MPI_COMM_WORLD);
-    /* cv::Mat combined; */
   } else {
-    smallImages[0] = imgFiltered;
+    smallImages.push_back(imgFiltered);
     for (int j = 1; j < num_procs; j++) {
       // printf("Ready to recive from process %d\n", j);
+      uchar *imgFilteredData = (uchar *)malloc(sizeof(uchar) * size);
       MPI_Recv(imgFilteredData, size, MPI_UNSIGNED_CHAR, j, 0, MPI_COMM_WORLD,
                &status);
-      cv::Mat imgrecive(smallSize.width, smallSize.height, CV_8UC3,
+      cv::Mat imgrecive(smallSize.height, smallSize.width, CV_8UC3,
                         imgFilteredData);
-      smallImages[j] = imgrecive;
-      /* printf("Recived data from process %d\n", j); */
-      /* imwrite("prueba" + to_string(j) + ".jpg", imgrecive); */
+      smallImages.push_back(imgrecive);
     }
-    Mat combined(width, height, CV_8UC3);
+
+    Mat combined;
     cv::hconcat(smallImages, combined);
-    imwrite("salida.jpg", combined);
+    auto end = high_resolution_clock::now();
+    duration<double, milli> total_time = (end - start);
+    cout << "time    = " << total_time.count() / 1000 << '\n';
+    /* imwrite("salida.jpg", combined); */
   }
-  /* printf("smallImages size %ld", smallImages.size()); */
   MPI_Finalize();
   return 0;
 }
