@@ -1,7 +1,7 @@
 #!/bin/bash
 clear
 CWD=$(pwd)
-mpicc -o mpi split-image.cpp `pkg-config --cflags --libs opencv` -lstdc++ -lmpi_cxx
+mpicc -o mpi mpi.cpp `pkg-config --cflags --libs opencv` -lstdc++ -lmpi_cxx
 clear
 for file in $CWD/in/*
 do
