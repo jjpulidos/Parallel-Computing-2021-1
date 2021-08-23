@@ -2,6 +2,7 @@
 
 ## ¿Que es?
 
+
 Implementaciones secuencial y paralelizada (mediante `pthread`) del filtro de mediana, usado para filtrar ciertos tipos de ruido, en particular el llamado "de sal y pimienta". Los ejecutables resultantes leen una imagen y crean una segunda imagen, filtrada.
 
 ## Dependencias
